@@ -1,6 +1,6 @@
 import { Ionicons } from '@expo/vector-icons';
+import { useFocusEffect } from '@react-navigation/native';
 import React, {
-  useEffect,
   useState
 } from 'react';
 
@@ -86,13 +86,13 @@ export default function StatisticsScreen() {
 
 
 
-
-
-  useEffect(() => {
+useFocusEffect(
+  React.useCallback(() => {
 
     fetchItems();
 
-  }, []);
+  }, [])
+);
 
 
 

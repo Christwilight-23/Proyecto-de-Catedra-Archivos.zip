@@ -1,6 +1,6 @@
 import { Picker } from '@react-native-picker/picker';
+import { useFocusEffect } from '@react-navigation/native';
 import React, {
-  useEffect,
   useState
 } from 'react';
 
@@ -25,6 +25,8 @@ export default function InventoryScreen() {
   const isAdmin = user?.role === 'admin';
 
   const [items, setItems] = useState<MedicalItem[]>([]);
+
+  const [errors, setErrors] = useState<any>({});
 
   const [loading, setLoading] = useState(true);
 
@@ -51,6 +53,77 @@ export default function InventoryScreen() {
   });
 
 
+  const validateForm = () => {
+
+  let newErrors: any = {};
+
+  if (!formData.name.trim()) {
+    newErrors.name = 'El nombre es obligatorio';
+  }
+
+  if (!formData.category.trim()) {
+    newErrors.category = 'La categoría es obligatoria';
+  }
+
+  if (!formData.quantity.trim()) {
+    newErrors.quantity = 'La cantidad es obligatoria';
+  }
+
+  if (!formData.unit.trim()) {
+    newErrors.unit = 'La unidad es obligatoria';
+  }
+
+  if (!formData.location.trim()) {
+    newErrors.location = 'La ubicación es obligatoria';
+  }
+
+  if (!formData.supplier.trim()) {
+    newErrors.supplier = 'El proveedor es obligatorio';
+  }
+
+  setErrors(newErrors);
+
+  return Object.keys(newErrors).length === 0;
+
+};
+
+const renderInput = (
+  label: string,
+  value: string,
+  onChangeText: (text: string) => void,
+  error?: string,
+  keyboardType: any = 'default'
+) => (
+
+  <View style={styles.inputGroup}>
+
+    <Text style={styles.inputLabel}>
+      {label}
+    </Text>
+
+    <TextInput
+      style={[
+        styles.input,
+        error && styles.inputError
+      ]}
+      placeholder={label}
+      value={value}
+      onChangeText={onChangeText}
+      keyboardType={keyboardType}
+      placeholderTextColor="#9ca3af"
+    />
+
+    {error && (
+
+      <Text style={styles.errorText}>
+        {error}
+      </Text>
+
+    )}
+
+  </View>
+
+);
 
 
 
@@ -254,12 +327,13 @@ export default function InventoryScreen() {
 
 
 
-
-  useEffect(() => {
+useFocusEffect(
+  React.useCallback(() => {
 
     fetchItems();
 
-  }, []);
+  }, [])
+);
 
 
 
@@ -358,29 +432,6 @@ export default function InventoryScreen() {
           onChangeText={setSearchTerm}
         />
 
-
-
-
-
-        <View style={styles.pickerContainer}>
-
-          <Picker
-            selectedValue={categoryFilter}
-            onValueChange={(value) =>
-              setCategoryFilter(value)
-            }
-          >
-            <Picker.Item label="Todas" value="all" />
-            <Picker.Item label="Medicamentos" value="medicamentos" />
-            <Picker.Item label="Equipos" value="equipos" />
-          </Picker>
-
-        </View>
-
-
-
-
-
         <View style={styles.pickerContainer}>
 
           <Picker
@@ -477,6 +528,8 @@ export default function InventoryScreen() {
             <Text style={styles.itemInfo}>
               Categoría: {item.category}
             </Text>
+            
+            
 
             <Text style={styles.itemInfo}>
               Cantidad: {item.quantity} {item.unit}
@@ -494,8 +547,14 @@ export default function InventoryScreen() {
               Proveedor: {item.supplier}
             </Text>
 
+            
+
             <Text style={styles.itemInfo}>
-              Vence: {item.expiryDate}
+              Vence:{' '}
+              {item.expiryDate
+              ? new Date(item.expiryDate)
+              .toLocaleDateString('es-ES')
+              : 'Sin fecha'}
             </Text>
 
 
@@ -565,200 +624,241 @@ export default function InventoryScreen() {
 
 
 
-      <Modal
-        visible={showAddModal}
-        animationType="slide"
-      >
+<Modal
+  visible={showAddModal}
+  animationType="slide"
+>
+  <ScrollView
+    style={styles.modalContainer}
+    showsVerticalScrollIndicator={false}
+  >
 
-        <ScrollView
-          style={{ flex: 1, padding: 20 }}
-        >
-
-          <Text style={styles.title}>
-            {editingItem
-              ? 'Editar'
-              : 'Agregar'}
-          </Text>
-
-
-
-
-
-          <TextInput
-            placeholder="Nombre"
-            style={styles.searchInput}
-            value={formData.name}
-            onChangeText={(text) =>
-              setFormData({
-                ...formData,
-                name: text
-              })
-            }
-          />
+    <Text style={styles.modalTitle}>
+      {editingItem
+        ? 'Editar Artículo'
+        : 'Agregar Artículo'}
+    </Text>
 
 
 
 
 
-          <TextInput
-            placeholder="Categoría"
-            style={styles.searchInput}
-            value={formData.category}
-            onChangeText={(text) =>
-              setFormData({
-                ...formData,
-                category: text
-              })
-            }
-          />
+    {renderInput(
+      'Nombre del artículo',
+      formData.name,
+      (text) =>
+        setFormData({
+          ...formData,
+          name: text
+        }),
+      errors.name
+    )}
 
 
 
 
 
-          <TextInput
-            placeholder="Cantidad"
-            keyboardType="numeric"
-            style={styles.searchInput}
-            value={formData.quantity}
-            onChangeText={(text) =>
-              setFormData({
-                ...formData,
-                quantity: text
-              })
-            }
-          />
 
+    {renderInput(
+      'Categoría',
+      formData.category,
+      (text) =>
+        setFormData({
+          ...formData,
+          category: text
+        }),
+      errors.category
+    )}
 
+    <View style={styles.credentialsBox}>
 
-
-
-          <TextInput
-            placeholder="Unidad"
-            style={styles.searchInput}
-            value={formData.unit}
-            onChangeText={(text) =>
-              setFormData({
-                ...formData,
-                unit: text
-              })
-            }
-          />
-
-
-
-
-
-          <TextInput
-            placeholder="Ubicación"
-            style={styles.searchInput}
-            value={formData.location}
-            onChangeText={(text) =>
-              setFormData({
-                ...formData,
-                location: text
-              })
-            }
-          />
-
-
-
-
-
-          <TextInput
-            placeholder="Fecha vencimiento"
-            style={styles.searchInput}
-            value={formData.expiryDate}
-            onChangeText={(text) =>
-              setFormData({
-                ...formData,
-                expiryDate: text
-              })
-            }
-          />
-
-
-
-
-
-          <TextInput
-            placeholder="Stock mínimo"
-            keyboardType="numeric"
-            style={styles.searchInput}
-            value={formData.minStock}
-            onChangeText={(text) =>
-              setFormData({
-                ...formData,
-                minStock: text
-              })
-            }
-          />
-
-
-
-
-
-          <TextInput
-            placeholder="Proveedor"
-            style={styles.searchInput}
-            value={formData.supplier}
-            onChangeText={(text) =>
-              setFormData({
-                ...formData,
-                supplier: text
-              })
-            }
-          />
-
-
-
-
-
-          <TouchableOpacity
-            style={styles.addButton}
-            onPress={async () => {
-
-              if (editingItem) {
-
-                await handleUpdateItem();
-
-              } else {
-
-                await handleAddItem();
-
-              }
-
-              setShowAddModal(false);
-
-            }}
-          >
-
-            <Text style={styles.addButtonText}>
-              Guardar
+            <Text style={styles.credentialsTitle}>
+              Categorías disponibles:
             </Text>
 
-          </TouchableOpacity>
-
-
-
-
-
-          <TouchableOpacity
-            style={styles.actionButton}
-            onPress={() =>
-              setShowAddModal(false)
-            }
-          >
-
-            <Text>
-              Cancelar
+            <Text style={styles.credentialText}>
+              • Medicamentos
             </Text>
 
-          </TouchableOpacity>
+            <Text style={styles.credentialText}>
+              • Protección
+            </Text>
 
-        </ScrollView>
+            <Text style={styles.credentialText}>
+              • Insumos
+            </Text>
 
-      </Modal>
+            <Text style={styles.credentialText}>
+              • Limpieza
+            </Text>
+
+          </View>
+
+
+
+
+    {renderInput(
+      'Cantidad',
+      formData.quantity,
+      (text) =>
+        setFormData({
+          ...formData,
+          quantity: text
+        }),
+      errors.quantity,
+      'numeric'
+    )}
+
+
+
+
+
+
+    {renderInput(
+      'Unidad',
+      formData.unit,
+      (text) =>
+        setFormData({
+          ...formData,
+          unit: text
+        }),
+      errors.unit
+    )}
+
+
+
+
+
+
+    {renderInput(
+      'Ubicación',
+      formData.location,
+      (text) =>
+        setFormData({
+          ...formData,
+          location: text
+        }),
+      errors.location
+    )}
+
+
+
+
+
+
+    {renderInput(
+      'Fecha vencimiento (YYYY-MM-DD)',
+      formData.expiryDate,
+      (text) =>
+        setFormData({
+          ...formData,
+          expiryDate: text
+        }),
+      undefined
+    )}
+
+
+
+
+
+
+    {renderInput(
+      'Stock mínimo',
+      formData.minStock,
+      (text) =>
+        setFormData({
+          ...formData,
+          minStock: text
+        }),
+      undefined,
+      'numeric'
+    )}
+
+
+
+
+
+
+    {renderInput(
+      'Proveedor',
+      formData.supplier,
+      (text) =>
+        setFormData({
+          ...formData,
+          supplier: text
+        }),
+      errors.supplier
+    )}
+
+  <View style={styles.credentialsBox}>
+
+            <Text style={styles.credentialsTitle}>
+              Proveedores disponibles:
+            </Text>
+
+            <Text style={styles.credentialText}>
+              • FarmaDistribuidora S.A.
+            </Text>
+
+            <Text style={styles.credentialText}>
+              • Medical Supplies
+            </Text>
+
+            </View>
+
+
+
+
+    <TouchableOpacity
+      style={styles.saveButton}
+      onPress={async () => {
+
+        if (!validateForm()) {
+          return;
+        }
+
+        if (editingItem) {
+
+          await handleUpdateItem();
+
+        } else {
+
+          await handleAddItem();
+
+        }
+
+        setShowAddModal(false);
+
+      }}
+    >
+
+      <Text style={styles.saveButtonText}>
+        Guardar
+      </Text>
+
+    </TouchableOpacity>
+
+
+
+
+
+
+    <TouchableOpacity
+      style={styles.cancelButton}
+      onPress={() =>
+        setShowAddModal(false)
+      }
+    >
+
+      <Text style={styles.cancelButtonText}>
+        Cancelar
+      </Text>
+
+    </TouchableOpacity>
+
+  </ScrollView>
+
+</Modal>
 
     </View>
   );
@@ -847,4 +947,96 @@ const styles = StyleSheet.create({
     borderRadius: 8,
   },
 
+  modalContainer: {
+  flex: 1,
+  backgroundColor: '#f5f5f5',
+  padding: 20,
+},
+
+modalTitle: {
+  fontSize: 26,
+  fontWeight: 'bold',
+  color: '#1f2937',
+  marginBottom: 24,
+  marginTop: 20,
+},
+
+inputGroup: {
+  marginBottom: 18,
+},
+
+inputLabel: {
+  fontSize: 14,
+  fontWeight: '600',
+  color: '#374151',
+  marginBottom: 8,
+},
+
+input: {
+  backgroundColor: '#fff',
+  borderWidth: 1,
+  borderColor: '#d1d5db',
+  borderRadius: 12,
+  padding: 14,
+  fontSize: 16,
+  color: '#111827',
+},
+
+inputError: {
+  borderColor: '#ef4444',
+},
+
+errorText: {
+  color: '#ef4444',
+  fontSize: 12,
+  marginTop: 6,
+},
+
+saveButton: {
+  backgroundColor: '#2563eb',
+  padding: 16,
+  borderRadius: 12,
+  alignItems: 'center',
+  marginTop: 10,
+},
+
+saveButtonText: {
+  color: '#fff',
+  fontSize: 16,
+  fontWeight: 'bold',
+},
+
+cancelButton: {
+  backgroundColor: '#e5e7eb',
+  padding: 16,
+  borderRadius: 12,
+  alignItems: 'center',
+  marginTop: 12,
+  marginBottom: 40,
+},
+
+cancelButtonText: {
+  color: '#374151',
+  fontSize: 16,
+  fontWeight: '600',
+},
+
+  credentialsBox: {
+    backgroundColor: '#f9fafb',
+    padding: 16,
+    borderRadius: 8,
+    borderWidth: 1,
+    borderColor: '#e5e7eb',
+  },
+  credentialsTitle: {
+    fontSize: 14,
+    fontWeight: '600',
+    marginBottom: 8,
+    color: '#374151',
+  },
+  credentialText: {
+    fontSize: 13,
+    color: '#6b7280',
+    marginBottom: 4,
+  },
 });
