@@ -23,33 +23,44 @@ db.connect((err) => {
   console.log('MySQL conectado');
 });
 
-app.post('/login', (req, res) => {
 
-  const { correo, password } = req.body;
+
+app.post('/auth/login', (req, res) => {
+
+  const { email, password } = req.body;
+
+  console.log(email);
+  console.log(password);
 
   const sql = `
     SELECT *
     FROM usuarios
-    WHERE correo = ?
+    WHERE email = ?
     AND password = ?
     AND activo = 1
   `;
 
   db.query(
     sql,
-    [correo, password],
+    [email, password],
     (err, results) => {
 
       if (err) {
+
         console.log(err);
 
         return res.status(500).json({
+          success: false,
           error: 'Error del servidor',
         });
       }
 
+      console.log(results);
+
       if (results.length === 0) {
+
         return res.status(401).json({
+          success: false,
           error: 'Credenciales inválidas',
         });
       }
@@ -57,15 +68,18 @@ app.post('/login', (req, res) => {
       const usuario = results[0];
 
       res.json({
-        id: usuario.id,
-        nombre: usuario.nombre,
-        correo: usuario.correo,
-        rol: usuario.rol,
+        success: true,
+
+        user: {
+          id: usuario.id,
+          name: usuario.nombre,
+          email: usuario.email,
+          role: usuario.rol,
+        }
       });
     }
   );
 });
-
 app.get('/articulos', (req, res) => {
 
   const sql = `
@@ -213,6 +227,7 @@ app.post('/articulos', (req, res) => {
     }
   );
 });
+
 
 app.put('/articulos/:id', (req, res) => {
 
